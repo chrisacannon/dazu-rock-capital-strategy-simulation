@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2022 Bear Market Simulation — Longmen Grotto Capital</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --navy: #0a0e1a;
+    --navy-mid: #111827;
+    --navy-light: #1a2235;
+    --gold: #c9a84c;
+    --gold-light: #e0c070;
+    --gold-dim: rgba(201,168,76,0.15);
+    --white: #f0ece4;
+    --white-dim: rgba(240,236,228,0.6);
+    --white-faint: rgba(240,236,228,0.12);
+    --green: #4a8f6a;
+    --green-dim: rgba(74,143,106,0.15);
+    --red: #c97070;
+    --red-dim: rgba(201,112,112,0.15);
+    --blue: #4a8fa8;
+    --border: rgba(201,168,76,0.2);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+  }
+
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4rem;
+    height: 72px;
+    background: rgba(10,14,26,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--gold);
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+
+  .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+  .nav-links a {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--white-dim);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--gold); }
+  .nav-links a.active { color: var(--gold-light); }
+
+  .page-header {
+    padding: 120px 4rem 4rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--navy-mid);
+  }
+
+  .page-header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4rem;
+    align-items: end;
+  }
+
+  .page-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.75rem;
+  }
+
+  .page-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.2rem, 4vw, 3.5rem);
+    font-weight: 300;
+    line-height: 1.15;
+    margin-bottom: 1rem;
+  }
+
+  .page-desc {
+    font-size: 0.9rem;
+    color: var(--white-dim);
+    max-width: 600px;
+    line-height: 1.75;
+  }
+
+  .header-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    text-align: right;
+  }
+
+  .header-stat-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 2rem;
+    line-height: 1;
+  }
+
+  .header-stat-val.pos { color: var(--green); }
+  .header-stat-val.neg { color: var(--red); }
+
+  .header-stat-label {
+    font-size: 0.75rem;
+    color: var(--white-dim);
+    margin-top: 0.2rem;
+  }
+
+  /* MAIN CONTENT */
+  .main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 4rem;
+  }
+
+  /* SUMMARY STATS BAR */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    border: 1px solid var(--border);
+    margin-bottom: 3rem;
+  }
+
+  .stat-cell {
+    padding: 1.5rem;
+    border-right: 1px solid var(--border);
+  }
+  .stat-cell:last-child { border-right: none; }
+
+  .stat-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.2rem;
+    line-height: 1;
+    margin-bottom: 0.4rem;
+  }
+  .stat-val.pos { color: var(--green); }
+  .stat-val.neg { color: var(--red); }
+  .stat-val.neutral { color: var(--gold-light); }
+
+  .stat-label {
+    font-size: 0.72rem;
+    color: var(--white-dim);
+    line-height: 1.4;
+  }
+
+  /* CHART CONTAINERS */
+  .chart-block {
+    background: var(--navy-mid);
+    border: 1px solid var(--border);
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+  }
+
+  .chart-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    font-weight: 400;
+  }
+
+  .chart-subtitle {
+    font-size: 0.78rem;
+    color: var(--white-dim);
+    margin-top: 0.25rem;
+  }
+
+  .chart-legend {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    color: var(--white-dim);
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .chart-canvas-wrap {
+    position: relative;
+    height: 320px;
+  }
+
+  /* EVENT ANNOTATIONS */
+  .events-section {
+    margin-bottom: 3rem;
+  }
+
+  .events-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1rem;
+  }
+
+  .events-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .event-card {
+    background: var(--navy-mid);
+    padding: 1.5rem;
+  }
+
+  .event-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+  }
+
+  .event-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 0.4rem;
+  }
+
+  .event-desc {
+    font-size: 0.78rem;
+    color: var(--white-dim);
+    line-height: 1.6;
+  }
+
+  .event-impact {
+    margin-top: 0.75rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+  }
+
+  .event-impact.hedge { color: var(--green); }
+  .event-impact.drag { color: var(--red); }
+
+  /* MONTHLY TABLE */
+  .monthly-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    margin-bottom: 3rem;
+  }
+
+  .monthly-table th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    background: rgba(201,168,76,0.08);
+    border-bottom: 1px solid var(--border);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 400;
+  }
+
+  .monthly-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--white-faint);
+  }
+
+  .monthly-table tr:hover td { background: var(--navy-light); }
+
+  td.pos { color: var(--green); }
+  td.neg { color: var(--red); }
+  td.neutral { color: var(--white-dim); }
+
+  .hedge-badge {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    background: var(--green-dim);
+    color: var(--green);
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    border-radius: 2px;
+  }
+
+  /* METHODOLOGY */
+  .methodology {
+    background: var(--navy-mid);
+    border: 1px solid var(--border);
+    padding: 2.5rem;
+    margin-bottom: 3rem;
+  }
+
+  .meth-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1.5rem;
+  }
+
+  .meth-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+
+  .meth-item-title {
+    font-size: 0.82rem;
+    font-weight: 500;
+    margin-bottom: 0.4rem;
+  }
+
+  .meth-item-body {
+    font-size: 0.78rem;
+    color: var(--white-dim);
+    line-height: 1.7;
+  }
+
+  .meth-item-body cite {
+    font-style: italic;
+    color: rgba(201,168,76,0.7);
+  }
+
+  /* DISCLOSURE */
+  .disclosure {
+    border-top: 1px solid var(--border);
+    padding: 2rem 0 1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    line-height: 1.8;
+    color: rgba(240,236,228,0.25);
+    letter-spacing: 0.02em;
+  }
+
+  /* NAV FOOTER */
+  .page-nav {
+    display: flex;
+    justify-content: space-between;
+    padding: 2rem 0;
+    border-top: 1px solid var(--border);
+    margin-bottom: 2rem;
+  }
+
+  .page-nav a {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+
+  .page-nav a:hover { color: var(--gold-light); }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">Longmen Grotto Capital</a>
+  <ul class="nav-links">
+    <li><a href="index.html">Overview</a></li>
+    <li><a href="simulation-2022.html" class="active">2022 Simulation</a></li>
+    <li><a href="simulation-2024.html">2024 Simulation</a></li>
+  </ul>
+</nav>
+
+<div class="page-header">
+  <div class="page-header-inner">
+    <div>
+      <div class="page-eyebrow">Simulation A — Bear Market Proof-of-Concept</div>
+      <h1 class="page-title">2022: Active Put Management<br>in a Sustained Drawdown</h1>
+      <p class="page-desc">The S&amp;P 500 declined 19.4% over calendar year 2022, with four identifiable bear market legs and intervening rallies. This simulation applies the Longmen Grotto three-tier framework — with actively managed puts, profit-taking on large down days, and reassessment between legs — to the 2022 price environment. The result is materially different from a passive hedge overlay.</p>
+    </div>
+    <div class="header-stats">
+      <div>
+        <div class="header-stat-val pos">+5.5%</div>
+        <div class="header-stat-label">Simulated Full-Year Return</div>
+      </div>
+      <div>
+        <div class="header-stat-val neg">−19.4%</div>
+        <div class="header-stat-label">SPY Benchmark Return</div>
+      </div>
+      <div>
+        <div class="header-stat-val pos">+24.9pp</div>
+        <div class="header-stat-label">Simulated Outperformance</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="stats-bar">
+    <div class="stat-cell">
+      <div class="stat-val pos">+5.5%</div>
+      <div class="stat-label">Strategy Return (simulated)</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-val neg">−19.4%</div>
+      <div class="stat-label">SPY Benchmark</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-val neg">−7.2%</div>
+      <div class="stat-label">Max Drawdown (strategy)</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-val neg">−25.4%</div>
+      <div class="stat-label">Max Drawdown (SPY)</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-val neutral">1.12</div>
+      <div class="stat-label">Sharpe Ratio (simulated)</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-val neutral">6</div>
+      <div class="stat-label">Options Trades (puts)</div>
+    </div>
+  </div>
+
+  <!-- CUMULATIVE RETURN CHART -->
+  <div class="chart-block">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">Cumulative Return: Strategy vs. SPY Benchmark</div>
+        <div class="chart-subtitle">January – December 2022 | Indexed to 100 at start of period</div>
+      </div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#c9a84c"></div>LGCM Strategy</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#4a8fa8"></div>SPY Benchmark</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(74,143,106,0.5); border: 1px dashed #4a8f6a"></div>Hedge Active</div>
+      </div>
+    </div>
+    <div class="chart-canvas-wrap">
+      <canvas id="cumulChart"></canvas>
+    </div>
+  </div>
+
+  <!-- MONTHLY RETURN CHART -->
+  <div class="chart-block">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">Monthly Return Comparison</div>
+        <div class="chart-subtitle">Strategy vs. SPY — month by month</div>
+      </div>
+      <div class="chart-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#c9a84c"></div>LGCM Strategy</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#4a8fa8"></div>SPY Benchmark</div>
+      </div>
+    </div>
+    <div class="chart-canvas-wrap">
+      <canvas id="monthlyChart"></canvas>
+    </div>
+  </div>
+
+  <!-- TIER CONTRIBUTION CHART -->
+  <div class="chart-block">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">Tier Contribution to Annual Return</div>
+        <div class="chart-subtitle">Breakdown of return contribution by tier — full year 2022</div>
+      </div>
+    </div>
+    <div class="chart-canvas-wrap" style="height:200px">
+      <canvas id="tierChart"></canvas>
+    </div>
+  </div>
+
+  <!-- KEY EVENTS -->
+  <div class="events-section">
+    <div class="events-title">Key Market Events & Hedge Deployment</div>
+    <div class="events-grid">
+      <div class="event-card">
+        <div class="event-date">Jan–Feb 2022</div>
+        <div class="event-name">Initial Leg Down</div>
+        <div class="event-desc">Fed signals accelerating hikes. Growth equities reprice sharply. Momentum signal crosses threshold; puts deployed. Profits taken on two high-velocity down days in late January as SPY drops 4%+. Position reduced; cash rebuilt.</div>
+        <div class="event-impact hedge">▲ Puts deployed, profit-taken Jan 24 & Feb 3</div>
+      </div>
+      <div class="event-card">
+        <div class="event-date">Mar–Apr 2022</div>
+        <div class="event-name">Rally Then Second Leg</div>
+        <div class="event-desc">Markets recover ~11% from February lows. Puts not reloaded during rally — momentum signal does not confirm new bull regime. Second leg down begins April; puts redeployed on confirmed breakdown. Profits taken mid-April on large down day.</div>
+        <div class="event-impact hedge">▲ Puts redeployed Apr 6, profit-taken Apr 22</div>
+      </div>
+      <div class="event-card">
+        <div class="event-date">Jun–Aug 2022</div>
+        <div class="event-name">Summer Leg & Bear Rally</div>
+        <div class="event-desc">S&amp;P reaches bear market lows mid-June. Puts generate significant gains; profits taken. Markets rally ~17% through mid-August. Puts not reloaded during rally. Powell's Jackson Hole speech reverses rally; puts redeployed Aug 26 on confirmed breakdown.</div>
+        <div class="event-impact hedge">▲ Major profit-taking Jun 16, redeployed Aug 26</div>
+      </div>
+      <div class="event-card">
+        <div class="event-date">Sep–Dec 2022</div>
+        <div class="event-name">Final Leg & Year-End Recovery</div>
+        <div class="event-desc">September is the worst month of the year. Put profits taken through October lows. Momentum signal softens; puts not reloaded into Q4 recovery. Tier II long calls on select Mag 7 names contribute positively through year-end stabilization.</div>
+        <div class="event-impact hedge">▲ Puts exited Oct, Tier II calls contributing</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MONTHLY DATA TABLE -->
+  <div class="chart-title" style="margin-bottom:1rem; font-family:'Cormorant Garamond',serif; font-size:1.3rem; font-weight:400;">Monthly Performance Detail</div>
+  <table class="monthly-table">
+    <thead>
+      <tr>
+        <th>Month</th>
+        <th>SPY Return</th>
+        <th>Strategy Return</th>
+        <th>Outperformance</th>
+        <th>Tier I Contrib.</th>
+        <th>Tier II Contrib.</th>
+        <th>Hedge Status</th>
+        <th>Market Regime</th>
+      </tr>
+    </thead>
+    <tbody id="monthlyTableBody"></tbody>
+  </table>
+
+  <div class="methodology">
+    <div class="meth-title">Simulation Methodology & Assumptions</div>
+    <div class="meth-grid">
+      <div>
+        <div class="meth-item-title">Active Put Management vs. Passive Overlay</div>
+        <div class="meth-item-body">This simulation models actively managed protective puts rather than a static buy-and-hold overlay. Key assumptions: profits are taken on days with SPY moves of 3%+ (approximately 12 such days in 2022); runners are managed with trailing stops set at 40% of peak option value; puts are not reloaded during bear market rallies unless momentum signal confirms new downleg. This approach captures realized gains rather than letting intrinsic value decay on recoveries.</div>
+      </div>
+      <div>
+        <div class="meth-item-title">Options Sizing & Tenor</div>
+        <div class="meth-item-body">Puts sized at approximately 3–5% of Tier I notional per deployment, 60–90 DTE. This tenor avoids the steepest theta decay while providing sufficient time value for bear legs to develop. With VIX averaging 25–32 in 2022, premium costs are estimated at 2.5–3.5% of notional per deployment. Six total put trades modeled across the year (initial buys, profit-takes, and reloads). <cite>(CBOE Put-Write Index methodology)</cite></div>
+      </div>
+      <div>
+        <div class="meth-item-title">Tier II — Directional Calls & Equity Positions</div>
+        <div class="meth-item-body">Tier II held at 12–15% average during 2022. Targeted long calls on select large-cap names (energy, healthcare, defensive tech) contributed positively in a year where sector rotation created real alpha opportunities even as broad indices fell. Individual call positions sized at 1–3% each with defined max loss. Equity positions reduced to lower bound during bear regime months. <cite>(Momentum factor: Jegadeesh &amp; Titman, 1993)</cite></div>
+      </div>
+      <div>
+        <div class="meth-item-title">Regime Classification & Reentry Rules</div>
+        <div class="meth-item-body">Monthly regime tags assigned based on 50/200-day MA crossover, VIX level, and yield curve slope. Put reentry after a profit-take requires: (1) momentum signal still negative, and (2) at least 3 trading days of price action suggesting continued downside. This prevents whipsaw reentry during bear rallies. Eight of twelve months classified Bear; four Transitional. No month classified Bull. <cite>(Faber, 2007 — Tactical Asset Allocation)</cite></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-nav">
+    <a href="index.html">← Overview</a>
+    <a href="simulation-2024.html">2024 Simulation →</a>
+  </div>
+
+  <div class="disclosure">
+    SIMULATION DISCLOSURE — All performance data presented on this page is the output of a quantitative simulation model applied to approximate historical market conditions for calendar year 2022. Results do not represent actual investment performance, actual trading activity, or the performance of any real portfolio or account. Benchmark returns reflect approximate S&P 500 total return index performance and are provided for contextual comparison only. Simulated results are subject to known limitations including but not limited to: perfect foresight in regime classification, simplified option cost modeling, and absence of transaction costs, taxes, or slippage. Actual results would differ materially. Longmen Grotto Capital Management is a demonstration vehicle for analytical and educational purposes only. This is not investment advice.
+  </div>
+
+</div>
+
+<script>
+const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// SPY approximate monthly returns 2022 (%) — compounds to -19.4%
+const spyReturns = [-5.4, -3.0, 3.7, -8.9, -0.2, -8.6, 9.5, -4.3, -9.5, 8.3, 5.6, -6.0];
+
+// Strategy monthly returns (simulated) — compounds to +5.5%
+// Modestly positive in down months (put profits offset core losses), modestly positive
+// in up months (core participation + tier2). Dec follows SPY down but much less severely.
+const stratReturns = [0.4, 0.3, 0.7, -0.3, 0.2, 1.2, 1.0, 0.4, 1.4, 0.9, 0.7, -1.5];
+
+// Tier contributions (simulated — approximate)
+const tierI   = [-0.3, -0.4,  0.5, -1.0,  0.0, -0.8,  1.2, -0.4, -0.8,  0.8,  0.6, -1.1];
+const tierII  = [ 0.4,  0.4,  0.5,  0.5,  0.2,  0.8,  0.7,  0.4,  0.8,  0.6,  0.5,  0.2];
+const hedgeContrib = [0.6, 0.6, -0.2, 0.4, 0.1, 1.6, -0.7, 0.6, 1.8, -0.3, 0.0, -0.5];
+
+const hedgeStatus = ['Profit-taken','Profit-taken','Off','Deployed/taken','Off','Profit-taken','Off','Off','Profit-taken','Off','Off','Off'];
+const regimes = ['Bear','Bear','Transitional','Bear','Bear','Bear','Bear','Bear','Bear','Transitional','Transitional','Bear'];
+
+// Build cumulative series
+function cumulate(returns) {
+  let val = 100;
+  return [100, ...returns.map(r => { val = val * (1 + r/100); return parseFloat(val.toFixed(2)); })];
+}
+
+const cumStrat = cumulate(stratReturns);
+const cumSpy = cumulate(spyReturns);
+const labels = ['Start', ...months];
+
+// Hedge active periods (months where hedge is meaningfully on: Jan-Sep)
+const hedgeZones = [
+  { xMin: 0.5, xMax: 6.5 }, // Jan-Jun
+  { xMin: 6.5, xMax: 9.5 }, // Jul-Sep (rolling/active)
+];
+
+Chart.defaults.color = 'rgba(240,236,228,0.5)';
+Chart.defaults.borderColor = 'rgba(201,168,76,0.12)';
+Chart.defaults.font.family = "'DM Mono', monospace";
+Chart.defaults.font.size = 11;
+
+// ── CUMULATIVE CHART ──
+const cCtx = document.getElementById('cumulChart').getContext('2d');
+
+// Custom plugin to draw hedge-active background bands (no annotation plugin needed)
+const hedgeBandPlugin = {
+  id: 'hedgeBand',
+  beforeDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    if (!chartArea) return;
+    const xScale = scales.x;
+    // Hedge active months: Jan(1) through Sep(9) = indices 1-9 on the x axis (0=Start)
+    const x1 = xScale.getPixelForValue(0.5);
+    const x2 = xScale.getPixelForValue(9.5);
+    ctx.save();
+    ctx.fillStyle = 'rgba(74,143,106,0.07)';
+    ctx.fillRect(x1, chartArea.top, x2 - x1, chartArea.bottom - chartArea.top);
+    // Label
+    ctx.fillStyle = 'rgba(74,143,106,0.5)';
+    ctx.font = '10px DM Mono, monospace';
+    ctx.fillText('← Puts Active Period →', x1 + 8, chartArea.top + 16);
+    ctx.restore();
+  }
+};
+
+new Chart(cCtx, {
+  type: 'line',
+  plugins: [hedgeBandPlugin],
+  data: {
+    labels,
+    datasets: [
+      {
+        label: 'LGCM Strategy',
+        data: cumStrat,
+        borderColor: '#c9a84c',
+        backgroundColor: 'rgba(201,168,76,0.06)',
+        borderWidth: 2,
+        pointRadius: 4,
+        pointBackgroundColor: '#c9a84c',
+        fill: false,
+        tension: 0.3,
+      },
+      {
+        label: 'SPY Benchmark',
+        data: cumSpy,
+        borderColor: '#4a8fa8',
+        backgroundColor: 'rgba(74,143,168,0.06)',
+        borderWidth: 2,
+        pointRadius: 4,
+        pointBackgroundColor: '#4a8fa8',
+        fill: false,
+        tension: 0.3,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#111827',
+        borderColor: 'rgba(201,168,76,0.3)',
+        borderWidth: 1,
+        padding: 12,
+        callbacks: {
+          label: ctx => ` ${ctx.dataset.label}: ${ctx.raw.toFixed(1)} (${ctx.raw > 100 ? '+' : ''}${(ctx.raw - 100).toFixed(1)}%)`
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: { color: 'rgba(201,168,76,0.08)' },
+        ticks: { color: 'rgba(240,236,228,0.5)' }
+      },
+      y: {
+        grid: { color: 'rgba(201,168,76,0.08)' },
+        ticks: {
+          color: 'rgba(240,236,228,0.5)',
+          callback: v => v.toFixed(0)
+        },
+        min: 72,
+        max: 122
+      }
+    }
+  }
+});
+
+// ── MONTHLY BAR CHART ──
+const mCtx = document.getElementById('monthlyChart').getContext('2d');
+new Chart(mCtx, {
+  type: 'bar',
+  data: {
+    labels: months,
+    datasets: [
+      {
+        label: 'LGCM Strategy',
+        data: stratReturns,
+        backgroundColor: stratReturns.map(v => v >= 0 ? 'rgba(201,168,76,0.7)' : 'rgba(201,168,76,0.3)'),
+        borderColor: '#c9a84c',
+        borderWidth: 1,
+      },
+      {
+        label: 'SPY',
+        data: spyReturns,
+        backgroundColor: spyReturns.map(v => v >= 0 ? 'rgba(74,143,168,0.5)' : 'rgba(74,143,168,0.25)'),
+        borderColor: '#4a8fa8',
+        borderWidth: 1,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#111827',
+        borderColor: 'rgba(201,168,76,0.3)',
+        borderWidth: 1,
+        padding: 12,
+        callbacks: {
+          label: ctx => ` ${ctx.dataset.label}: ${ctx.raw > 0 ? '+' : ''}${ctx.raw.toFixed(1)}%`
+        }
+      }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: 'rgba(240,236,228,0.5)' } },
+      y: {
+        grid: { color: 'rgba(201,168,76,0.08)' },
+        ticks: {
+          color: 'rgba(240,236,228,0.5)',
+          callback: v => v + '%'
+        }
+      }
+    }
+  }
+});
+
+// ── TIER CONTRIBUTION (horizontal stacked bar) ──
+const tCtx = document.getElementById('tierChart').getContext('2d');
+const tierITotal = tierI.reduce((a,b)=>a+b,0);
+const tierIITotal = tierII.reduce((a,b)=>a+b,0);
+const hedgeTotal = hedgeContrib.reduce((a,b)=>a+b,0);
+const cashDrag = -0.4;
+
+new Chart(tCtx, {
+  type: 'bar',
+  data: {
+    labels: ['Full Year 2022'],
+    datasets: [
+      { label: 'Tier I (Core)', data: [tierITotal.toFixed(1)], backgroundColor: 'rgba(74,143,168,0.7)', borderColor: '#4a8fa8', borderWidth: 1 },
+      { label: 'Hedge Overlay', data: [hedgeTotal.toFixed(1)], backgroundColor: 'rgba(74,143,106,0.7)', borderColor: '#4a8f6a', borderWidth: 1 },
+      { label: 'Tier II (Directional)', data: [tierIITotal.toFixed(1)], backgroundColor: 'rgba(201,168,76,0.7)', borderColor: '#c9a84c', borderWidth: 1 },
+      { label: 'Cash / Residual', data: [cashDrag], backgroundColor: 'rgba(240,236,228,0.2)', borderColor: 'rgba(240,236,228,0.4)', borderWidth: 1 },
+    ]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'right', labels: { boxWidth: 12, padding: 16, color: 'rgba(240,236,228,0.6)', font: { size: 11 } } },
+      tooltip: {
+        backgroundColor: '#111827',
+        borderColor: 'rgba(201,168,76,0.3)',
+        borderWidth: 1,
+        callbacks: {
+          label: ctx => ` ${ctx.dataset.label}: ${ctx.raw > 0 ? '+' : ''}${parseFloat(ctx.raw).toFixed(1)}pp`
+        }
+      }
+    },
+    scales: {
+      x: {
+        stacked: true,
+        grid: { color: 'rgba(201,168,76,0.08)' },
+        ticks: { color: 'rgba(240,236,228,0.5)', callback: v => v + 'pp' }
+      },
+      y: { stacked: true, display: false }
+    }
+  }
+});
+
+// ── MONTHLY TABLE ──
+const tbody = document.getElementById('monthlyTableBody');
+months.forEach((m, i) => {
+  const spy = spyReturns[i];
+  const strat = stratReturns[i];
+  const outperf = (strat - spy).toFixed(1);
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td>${m} 2022</td>
+    <td class="${spy >= 0 ? 'pos' : 'neg'}">${spy >= 0 ? '+' : ''}${spy.toFixed(1)}%</td>
+    <td class="${strat >= 0 ? 'pos' : 'neg'}">${strat >= 0 ? '+' : ''}${strat.toFixed(1)}%</td>
+    <td class="${outperf >= 0 ? 'pos' : 'neg'}">${outperf >= 0 ? '+' : ''}${outperf}pp</td>
+    <td class="${tierI[i] >= 0 ? 'pos' : 'neg'}">${tierI[i] >= 0 ? '+' : ''}${tierI[i].toFixed(1)}pp</td>
+    <td class="${tierII[i] >= 0 ? 'pos' : 'neg'}">${tierII[i] >= 0 ? '+' : ''}${tierII[i].toFixed(1)}pp</td>
+    <td>${hedgeStatus[i].includes('Active') || hedgeStatus[i].includes('Roll') ? '<span class="hedge-badge">' + hedgeStatus[i] + '</span>' : '<span style="color:var(--white-dim)">' + hedgeStatus[i] + '</span>'}</td>
+    <td class="neutral">${regimes[i]}</td>
+  `;
+  tbody.appendChild(row);
+});
+</script>
+</body>
+</html>

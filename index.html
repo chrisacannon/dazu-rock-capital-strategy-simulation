@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Longmen Grotto Capital Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0a0e1a;
+    --navy-mid: #111827;
+    --navy-light: #1a2235;
+    --gold: #c9a84c;
+    --gold-light: #e0c070;
+    --gold-dim: rgba(201,168,76,0.15);
+    --white: #f0ece4;
+    --white-dim: rgba(240,236,228,0.6);
+    --white-faint: rgba(240,236,228,0.15);
+    --accent-blue: #4a8fa8;
+    --accent-green: #4a8f6a;
+    --border: rgba(201,168,76,0.2);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE TEXTURE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.4;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4rem;
+    height: 72px;
+    background: rgba(10,14,26,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 2.5rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--white-dim);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--gold); }
+
+  .nav-links a.active { color: var(--gold-light); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 120px 4rem 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    right: -10%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: 10%;
+    left: -5%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(74,143,168,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.2s forwards;
+  }
+
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3rem, 6vw, 5.5rem);
+    font-weight: 300;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    max-width: 900px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.4s forwards;
+  }
+
+  .hero-title em {
+    font-style: italic;
+    color: var(--gold-light);
+  }
+
+  .hero-divider {
+    width: 80px;
+    height: 1px;
+    background: var(--gold);
+    margin: 2.5rem 0;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.6s forwards;
+  }
+
+  .hero-desc {
+    max-width: 560px;
+    font-size: 1rem;
+    color: var(--white-dim);
+    line-height: 1.8;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.8s forwards;
+  }
+
+  .hero-cta {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 3rem;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 1s forwards;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.8rem 1.8rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: all 0.25s;
+    cursor: pointer;
+    border: none;
+  }
+
+  .btn-primary {
+    background: var(--gold);
+    color: var(--navy);
+  }
+
+  .btn-primary:hover {
+    background: var(--gold-light);
+    transform: translateY(-2px);
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--white-dim);
+    border: 1px solid var(--border);
+  }
+
+  .btn-outline:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+    transform: translateY(-2px);
+  }
+
+  /* ── DECORATIVE TICKER ── */
+  .ticker-bar {
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 0;
+    overflow: hidden;
+    background: var(--navy-mid);
+    margin-bottom: 6rem;
+  }
+
+  .ticker-inner {
+    display: flex;
+    gap: 4rem;
+    animation: ticker 30s linear infinite;
+    white-space: nowrap;
+  }
+
+  .ticker-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    color: var(--white-dim);
+    flex-shrink: 0;
+  }
+
+  .ticker-item .symbol { color: var(--gold); }
+  .ticker-item .up { color: #4a8f6a; }
+  .ticker-item .down { color: #8f4a4a; }
+
+  /* ── SECTIONS ── */
+  section {
+    padding: 6rem 4rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1rem;
+  }
+
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 3.5vw, 2.8rem);
+    font-weight: 300;
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-lead {
+    font-size: 1rem;
+    color: var(--white-dim);
+    max-width: 640px;
+    line-height: 1.8;
+    margin-bottom: 3rem;
+  }
+
+  /* ── PHILOSOPHY GRID ── */
+  .philosophy-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-top: 3rem;
+  }
+
+  .philo-card {
+    background: var(--navy-mid);
+    padding: 2.5rem;
+    transition: background 0.2s;
+  }
+
+  .philo-card:hover { background: var(--navy-light); }
+
+  .philo-number {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3rem;
+    font-weight: 300;
+    color: var(--gold-dim);
+    line-height: 1;
+    margin-bottom: 1rem;
+  }
+
+  .philo-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gold-light);
+    margin-bottom: 0.75rem;
+  }
+
+  .philo-body {
+    font-size: 0.9rem;
+    color: var(--white-dim);
+    line-height: 1.75;
+  }
+
+  /* ── TIER TABLE ── */
+  .tier-section {
+    background: var(--navy-mid);
+    border: 1px solid var(--border);
+    padding: 0;
+    overflow: hidden;
+    margin-top: 3rem;
+  }
+
+  .tier-header {
+    display: grid;
+    grid-template-columns: 60px 1fr 160px 180px 1fr;
+    gap: 0;
+    padding: 1rem 2rem;
+    background: rgba(201,168,76,0.08);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tier-header span {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+
+  .tier-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 160px 180px 1fr;
+    gap: 0;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--white-faint);
+    transition: background 0.15s;
+    align-items: start;
+  }
+
+  .tier-row:last-child { border-bottom: none; }
+  .tier-row:hover { background: var(--navy-light); }
+
+  .tier-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    font-weight: 300;
+    color: var(--gold);
+    line-height: 1;
+    padding-top: 0.2rem;
+  }
+
+  .tier-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--white);
+    margin-bottom: 0.3rem;
+  }
+
+  .tier-desc {
+    font-size: 0.8rem;
+    color: var(--white-dim);
+    line-height: 1.6;
+  }
+
+  .tier-alloc {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--white);
+    padding-top: 0.1rem;
+  }
+
+  .tier-alloc span {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--white-dim);
+    margin-top: 0.2rem;
+  }
+
+  .tier-instruments {
+    font-size: 0.78rem;
+    color: var(--accent-blue);
+    font-family: 'DM Mono', monospace;
+    line-height: 1.8;
+    padding-top: 0.1rem;
+  }
+
+  .tier-academic {
+    font-size: 0.78rem;
+    color: var(--white-dim);
+    line-height: 1.7;
+    padding-top: 0.1rem;
+  }
+
+  .tier-academic cite {
+    font-style: italic;
+    color: rgba(201,168,76,0.7);
+  }
+
+  /* ── RISK FRAMEWORK ── */
+  .risk-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-top: 3rem;
+  }
+
+  .risk-card {
+    background: var(--navy-mid);
+    padding: 2rem;
+  }
+
+  .risk-icon {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+
+  .risk-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+
+  .risk-body {
+    font-size: 0.82rem;
+    color: var(--white-dim);
+    line-height: 1.7;
+  }
+
+  /* ── SIMULATIONS CTA ── */
+  .sim-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-top: 3rem;
+  }
+
+  .sim-card {
+    background: var(--navy-mid);
+    padding: 3rem;
+    text-decoration: none;
+    display: block;
+    transition: background 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .sim-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--gold);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+
+  .sim-card:hover { background: var(--navy-light); }
+  .sim-card:hover::after { transform: scaleX(1); }
+
+  .sim-year {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 4rem;
+    font-weight: 300;
+    color: rgba(201,168,76,0.2);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+
+  .sim-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1rem;
+  }
+
+  .sim-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.6rem;
+    font-weight: 400;
+    color: var(--white);
+    margin-bottom: 0.75rem;
+  }
+
+  .sim-desc {
+    font-size: 0.85rem;
+    color: var(--white-dim);
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+  }
+
+  .sim-stat-row {
+    display: flex;
+    gap: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--white-faint);
+  }
+
+  .sim-stat { }
+
+  .sim-stat-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.1rem;
+    color: var(--white);
+  }
+
+  .sim-stat-val.pos { color: var(--accent-green); }
+  .sim-stat-val.neg { color: #c97070; }
+
+  .sim-stat-label {
+    font-size: 0.72rem;
+    color: var(--white-dim);
+    margin-top: 0.15rem;
+  }
+
+  .sim-arrow {
+    position: absolute;
+    top: 3rem;
+    right: 3rem;
+    font-size: 1.5rem;
+    color: var(--gold);
+    opacity: 0.3;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+
+  .sim-card:hover .sim-arrow {
+    opacity: 0.8;
+    transform: translate(4px, -4px);
+  }
+
+  /* ── DISCLOSURE ── */
+  .disclosure {
+    padding: 3rem 4rem;
+    border-top: 1px solid var(--border);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .disclosure p {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    line-height: 1.8;
+    color: rgba(240,236,228,0.3);
+    letter-spacing: 0.03em;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem 4rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  footer span {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: rgba(240,236,228,0.25);
+    letter-spacing: 0.08em;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── SEPARATOR ── */
+  .full-bleed {
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Longmen Grotto Capital</div>
+  <ul class="nav-links">
+    <li><a href="index.html" class="active">Overview</a></li>
+    <li><a href="simulation-2022.html">2022 Simulation</a></li>
+    <li><a href="simulation-2024.html">2024 Simulation</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Longmen Grotto Capital Management — Proof-of-Concept Strategy Model</div>
+  <h1 class="hero-title">
+    A <em>tiered allocation framework</em><br>for asymmetric market environments
+  </h1>
+  <div class="hero-divider"></div>
+  <p class="hero-desc">
+    This site presents a simulation-based demonstration of a core-satellite investment strategy with systematic downside protection. All performance data is modeled; no actual client assets or proprietary trading records are represented.
+  </p>
+  <div class="hero-cta">
+    <a href="simulation-2022.html" class="btn btn-primary">2022 Bear Market Simulation →</a>
+    <a href="simulation-2024.html" class="btn btn-outline">2024 Bull Market Simulation →</a>
+  </div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker-bar full-bleed">
+  <div class="ticker-inner">
+    <div class="ticker-item"><span class="symbol">SPY</span> S&amp;P 500 ETF <span class="down">▼ 19.4% (2022)</span></div>
+    <div class="ticker-item"><span class="symbol">QQQ</span> NASDAQ ETF <span class="down">▼ 32.6% (2022)</span></div>
+    <div class="ticker-item"><span class="symbol">LGCM</span> Tier I Core <span class="up">▲ 65–75% allocation</span></div>
+    <div class="ticker-item"><span class="symbol">PUT</span> SPY Puts — Actively Managed <span class="up">▲ Profit-taking on down legs</span></div>
+    <div class="ticker-item"><span class="symbol">CALL</span> Targeted Long Calls <span class="up">▲ 10–18% Tier II</span></div>
+    <div class="ticker-item"><span class="symbol">SPY</span> S&amp;P 500 ETF <span class="up">▲ 24.2% (2024)</span></div>
+    <div class="ticker-item"><span class="symbol">QQQ</span> NASDAQ ETF <span class="up">▲ 25.6% (2024)</span></div>
+    <div class="ticker-item"><span class="symbol">LGCM</span> Simulated Model <span class="symbol">— Not actual returns</span></div>
+    <!-- duplicate for seamless loop -->
+    <div class="ticker-item"><span class="symbol">SPY</span> S&amp;P 500 ETF <span class="down">▼ 19.4% (2022)</span></div>
+    <div class="ticker-item"><span class="symbol">QQQ</span> NASDAQ ETF <span class="down">▼ 32.6% (2022)</span></div>
+    <div class="ticker-item"><span class="symbol">LGCM</span> Tier I Core <span class="up">▲ 65–75% allocation</span></div>
+    <div class="ticker-item"><span class="symbol">PUT</span> SPY Puts — Actively Managed <span class="up">▲ Profit-taking on down legs</span></div>
+    <div class="ticker-item"><span class="symbol">CALL</span> Targeted Long Calls <span class="up">▲ 10–18% Tier II</span></div>
+    <div class="ticker-item"><span class="symbol">SPY</span> S&amp;P 500 ETF <span class="up">▲ 24.2% (2024)</span></div>
+    <div class="ticker-item"><span class="symbol">QQQ</span> NASDAQ ETF <span class="up">▲ 25.6% (2024)</span></div>
+    <div class="ticker-item"><span class="symbol">LGCM</span> Simulated Model <span class="symbol">— Not actual returns</span></div>
+  </div>
+</div>
+
+<!-- PHILOSOPHY -->
+<section>
+  <div class="section-eyebrow">Investment Philosophy</div>
+  <h2 class="section-title reveal">Structured discipline across market regimes</h2>
+  <p class="section-lead reveal">The strategy is built on the premise that durable risk-adjusted returns require explicit allocation rules combined with active options management — not passive hedging or discretionary flexibility. Each tier serves a distinct purpose; together they create a portfolio designed to generate alpha in both advancing and declining markets.</p>
+
+  <div class="philosophy-grid reveal">
+    <div class="philo-card">
+      <div class="philo-number">01</div>
+      <div class="philo-title">Regime Awareness</div>
+      <p class="philo-body">Market environments — trending bull, bear, sideways — demand different allocation responses. The framework adjusts options exposure and tier weights based on defined regime signals rather than reactive judgment.</p>
+    </div>
+    <div class="philo-card">
+      <div class="philo-number">02</div>
+      <div class="philo-title">Active Options Management</div>
+      <p class="philo-body">Protective puts are not held passively to expiration. Profits are taken on large down-move days; runners are managed with adjusted stops. After significant down legs, positions are reassessed before reloading — reentry requires confirmation of continued downside momentum. This active management is what separates the strategy's put P&amp;L from a static overlay.</p>
+    </div>
+    <div class="philo-card">
+      <div class="philo-number">03</div>
+      <div class="philo-title">Tiered Risk Budgeting</div>
+      <p class="philo-body">Risk is allocated deliberately across tiers with explicit bounds. The core tier prioritizes capital preservation; the directional tier accepts higher variance for return enhancement; the speculative tier — including targeted long calls — is sized to be portfolio-immaterial at the position level.</p>
+    </div>
+    <div class="philo-card">
+      <div class="philo-number">04</div>
+      <div class="philo-title">Rules Over Discretion</div>
+      <p class="philo-body">Entry, exit, and rebalancing triggers are defined in advance. This removes the behavioral vulnerabilities — loss aversion, recency bias, overconfidence — that most systematically damage discretionary portfolio performance.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TIER STRUCTURE -->
+<section>
+  <div class="section-eyebrow">Portfolio Construction</div>
+  <h2 class="section-title reveal">Three-tier allocation framework</h2>
+  <p class="section-lead reveal">Academic grounding in core-satellite theory (Leibowitz &amp; Bova) and risk-parity principles informs the tier boundaries. Each tier has defined allocation bounds, instrument scope, and rebalancing logic. An explicit cash reserve is maintained at all times as a strategic buffer, not a residual.</p>
+
+  <div class="tier-section reveal">
+    <div class="tier-header">
+      <span>#</span>
+      <span>Tier &amp; Description</span>
+      <span>Target Allocation</span>
+      <span>Instruments</span>
+      <span>Academic Framework</span>
+    </div>
+
+    <div class="tier-row">
+      <div class="tier-num">I</div>
+      <div>
+        <div class="tier-name">Core — Index Participation with Active Put Overlay</div>
+        <div class="tier-desc">Long-only broad market index exposure paired with actively managed protective puts. Puts are traded — not held to expiration — with profits taken on large down-move days and positions reassessed between bear market legs. Allocation moves toward lower bound when puts are active.</div>
+      </div>
+      <div class="tier-alloc">65–75%<span>of total portfolio<br>lower bound when<br>puts active</span></div>
+      <div class="tier-instruments">SPY / QQQ<br>SPY Put Options<br>(60–90 DTE)<br>actively managed</div>
+      <div class="tier-academic">Core-satellite construction <cite>(Leibowitz &amp; Bova, 2005)</cite>; active put overlay vs. passive buy-write <cite>(CBOE Put-Write Index research)</cite>; convex payoff structure <cite>(Taleb, 2012)</cite>.</div>
+    </div>
+
+    <div class="tier-row">
+      <div class="tier-num">II</div>
+      <div>
+        <div class="tier-name">Directional — Tactical Equity &amp; Long Call Positions</div>
+        <div class="tier-desc">Short-to-medium term directional positions in large-cap equities where momentum and fundamental signals align. Includes targeted long calls on researched names treated as defined-risk asymmetric bets — sized individually at 1–3% of portfolio. Calls are high-conviction positions with a clear thesis and defined max loss, not speculative noise.</div>
+      </div>
+      <div class="tier-alloc">10–18%<span>of total portfolio<br>opportunity-driven<br>within hard bounds</span></div>
+      <div class="tier-instruments">Mag 7 / large-cap equities<br>Targeted long calls<br>(researched names)<br>directional options</div>
+      <div class="tier-academic">Tactical asset allocation <cite>(Faber, 2007)</cite>; momentum premium <cite>(Jegadeesh &amp; Titman, 1993)</cite>; defined-risk options as asymmetric bets <cite>(Taleb, 2012 — barbell)</cite>.</div>
+    </div>
+
+    <div class="tier-row">
+      <div class="tier-num">III</div>
+      <div>
+        <div class="tier-name">Speculative — High-Variance Opportunity Set</div>
+        <div class="tier-desc">Asymmetric, high-conviction positions in small-caps, short-dated options, and digital assets. Sized at portfolio-immaterial levels; total loss of Tier III is a designed tolerance, not an unexpected event. Not all clients participate in Tier III.</div>
+      </div>
+      <div class="tier-alloc">1–4%<span>of total portfolio<br>hard cap enforced</span></div>
+      <div class="tier-instruments">Small-cap equities<br>Short-dated options<br>Crypto (BTC/ETH)</div>
+      <div class="tier-academic">Kelly Criterion for position sizing <cite>(Kelly, 1956)</cite>; barbell strategy <cite>(Taleb, 2012)</cite>; behavioral finance — isolating speculative exposure to prevent contamination of core.</div>
+    </div>
+
+    <div class="tier-row">
+      <div class="tier-num" style="color:var(--white-dim); font-size:1.3rem; padding-top:0.4rem;">C</div>
+      <div>
+        <div class="tier-name">Cash Reserve — Strategic Buffer</div>
+        <div class="tier-desc">Remaining portfolio weight held in cash or short-term equivalents. This is an explicit, managed allocation — not a residual. It funds options premium on put deployments, supports rebalancing without forced liquidation, and provides dry powder for opportunistic deployment in dislocated markets. Cash weight increases when Tier II is at lower bound and puts are active.</div>
+      </div>
+      <div class="tier-alloc">8–15%<span>of total portfolio<br>increases during<br>active hedge periods</span></div>
+      <div class="tier-instruments">Cash / T-bills<br>Money market<br>Short-duration<br>equivalents</div>
+      <div class="tier-academic">Liquidity buffer as strategic asset <cite>(Leibowitz &amp; Bova, 2005)</cite>; optionality value of cash in volatile regimes; cash as a position, not an absence of one.</div>
+    </div>
+  </div>
+</section>
+
+<!-- RISK FRAMEWORK -->
+<section>
+  <div class="section-eyebrow">Risk Management</div>
+  <h2 class="section-title reveal">Explicit rules for drawdown control</h2>
+  <p class="section-lead reveal">Risk management in this framework is not reactive — it is pre-specified. The following mechanisms are active at all times regardless of market conditions or short-term performance.</p>
+
+  <div class="risk-grid reveal">
+    <div class="risk-card">
+      <div class="risk-icon">01 — Hedge Trigger</div>
+      <div class="risk-title">Momentum-Based Put Deployment</div>
+      <p class="risk-body">Protective puts on the SPY/QQQ core position are purchased when a defined momentum signal crosses a threshold (e.g., 50-day MA crosses below 200-day MA). Tenor is 60–90 DTE; positions are actively managed and not held passively to expiration.</p>
+    </div>
+    <div class="risk-card">
+      <div class="risk-icon">02 — Tier Bounds</div>
+      <div class="risk-title">Hard Allocation Ceilings</div>
+      <p class="risk-body">Each tier operates within defined allocation bounds. Tier III has a 4% hard ceiling; breaches trigger mandatory rebalancing. No single position in Tier II exceeds 7% of total portfolio.</p>
+    </div>
+    <div class="risk-card">
+      <div class="risk-icon">03 — Cash Buffer</div>
+      <div class="risk-title">Residual Cash Reserve</div>
+      <p class="risk-body">Remaining portfolio weight after tier allocations is held in cash or equivalents. This provides optionality for hedge rolling costs, rebalancing, and opportunistic deployment in dislocated markets.</p>
+    </div>
+    <div class="risk-card">
+      <div class="risk-icon">04 — Drawdown Limit</div>
+      <div class="risk-title">Portfolio-Level Stop</div>
+      <p class="risk-body">If total portfolio drawdown from peak exceeds 12%, Tier II positions are reduced to minimum allocation and Tier III is liquidated. Core hedge is reviewed for extension.</p>
+    </div>
+    <div class="risk-card">
+      <div class="risk-icon">05 — Rebalance Cadence</div>
+      <div class="risk-title">Quarterly Structural Review</div>
+      <p class="risk-body">Tier allocations are formally reviewed quarterly against defined bands. Drift of more than 5 percentage points from target triggers rebalancing. Intra-quarter rebalancing occurs only on breach of hard limits.</p>
+    </div>
+    <div class="risk-card">
+      <div class="risk-icon">06 — Regime Classification</div>
+      <div class="risk-title">Market Regime Tagging</div>
+      <p class="risk-body">Each month is classified as Bull, Bear, or Transitional based on price momentum, VIX level, and yield curve slope. Tier II allocation target adjusts ±5% based on regime tag. Tier I hedge budget adjusts ±2%.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SIMULATIONS -->
+<section>
+  <div class="section-eyebrow">Simulations</div>
+  <h2 class="section-title reveal">Two market environments. One framework.</h2>
+  <p class="section-lead reveal">The strategy is tested against two historically distinct periods — a severe bear market and a sustained bull market — to evaluate behavior across regimes. Active options management, not passive hedging, is the key variable in both. All data is simulated; see methodology disclosures on each page.</p>
+
+  <div class="sim-grid reveal">
+    <a href="simulation-2022.html" class="sim-card">
+      <div class="sim-arrow">↗</div>
+      <div class="sim-year">2022</div>
+      <div class="sim-label">Bear Market Proof-of-Concept</div>
+      <div class="sim-title">Active put management<br>in a sustained drawdown</div>
+      <div class="sim-desc">S&amp;P 500 fell 19.4%. Four distinct bear market legs created multiple put deployment and profit-taking events. This simulation models how active options management — taking profits on down days, reassessing between legs, reloading on confirmation — generated meaningful outperformance versus passive exposure.</div>
+      <div class="sim-stat-row">
+        <div class="sim-stat">
+          <div class="sim-stat-val pos">+5.5%</div>
+          <div class="sim-stat-label">Simulated Strategy Return</div>
+        </div>
+        <div class="sim-stat">
+          <div class="sim-stat-val neg">−19.4%</div>
+          <div class="sim-stat-label">SPY Benchmark</div>
+        </div>
+        <div class="sim-stat">
+          <div class="sim-stat-val pos">+24.9pp</div>
+          <div class="sim-stat-label">Simulated Outperformance</div>
+        </div>
+      </div>
+    </a>
+
+    <a href="simulation-2024.html" class="sim-card">
+      <div class="sim-arrow">↗</div>
+      <div class="sim-year">2024</div>
+      <div class="sim-label">Bull Market — Alpha Through Active Management</div>
+      <div class="sim-title">Benchmark-beating returns<br>in a trending market</div>
+      <div class="sim-desc">S&amp;P 500 gained 24.2%. Rather than lagging the benchmark, targeted long call positions and tightly managed put exposure generated modest outperformance. This simulation shows that active options management is the distinguishing feature in both regimes — not just in down markets.</div>
+      <div class="sim-stat-row">
+        <div class="sim-stat">
+          <div class="sim-stat-val pos">+27.4%</div>
+          <div class="sim-stat-label">Simulated Strategy Return</div>
+        </div>
+        <div class="sim-stat">
+          <div class="sim-stat-val pos">+24.2%</div>
+          <div class="sim-stat-label">SPY Benchmark</div>
+        </div>
+        <div class="sim-stat">
+          <div class="sim-stat-val pos">+3.2pp</div>
+          <div class="sim-stat-label">Simulated Outperformance</div>
+        </div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- DISCLOSURE -->
+<div class="disclosure full-bleed">
+  <p>SIMULATION DISCLOSURE — All performance figures presented on this site are the output of a quantitative simulation model and do not represent actual investment results, actual trading history, or the performance of any real portfolio or account. Longmen Grotto Capital Management is a demonstration vehicle created for analytical and educational purposes. Past simulated performance is not indicative of future results. No investment advice is offered or implied. This material is not an offering or solicitation of any investment product or service. Benchmark returns (SPY, QQQ) reflect approximate historical index performance for the stated periods and are provided solely for contextual comparison.</p>
+</div>
+
+<footer>
+  <span>© Longmen Grotto Capital Management — Simulation Model</span>
+  <span>For analytical demonstration purposes only</span>
+</footer>
+
+<script>
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 80);
+      }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
